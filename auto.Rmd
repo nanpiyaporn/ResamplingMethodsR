@@ -1,0 +1,144 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+finish the first one
+```{r}
+library(ISLR2)
+attach(Auto)
+
+n = nrow(Auto)
+test.indices = 1
+
+data.test = Auto[test.indices,]
+data.train = Auto[-test.indices,]
+
+model = lm (mpg~horsepower, data = data.train)
+val.pred = predict(model, newdata = data.test)
+mse = (data.test$mpg - val.pred)^2
+mse
+```
+2
+```{r}
+
+test.indices = 2
+
+data.test = Auto[test.indices,]
+data.train = Auto[-test.indices,]
+
+model = lm (mpg~horsepower, data = data.train)
+
+val.pred = predict(model, newdata = data.test)
+mse = (data.test$mpg - val.pred)^2
+mse
+
+```
+# Manual way
+```{r}
+ N= nrow(Auto)
+#correct answer
+
+#test.indices = 1
+val.mses = c()
+for (test.indices in 1:N){
+
+  data.test = Auto[test.indices,]
+  data.train = Auto[-test.indices,]
+  
+  #model = lm(mpg~horsepower + I(horsepower^2)), data = data.train)
+  model = lm(mpg~poly(horsepower, 1 ), data = data.train)
+
+  val.pred = predict(model, newdata = data.test)
+  mse = (data.test$mpg - val.pred)^2
+  val.mses = c(val.mses, mse)
+  
+}
+mean(val.mses)
+
+```
+# LOOCV
+## CV.glm
+
+```{r}
+
+#model1 = lm(mpg~horsepower , data = Auto)
+model2 = glm(mpg~horsepower , data = Auto)
+
+summary(model2)
+
+```
+
+```{r}
+library(boot)
+model1 = lm(mpg~horsepower , data = Auto)
+coef(model1)
+
+model2 = glm(mpg~horsepower , data = Auto)
+coef(model2)
+
+```
+
+# Why we need glm instead of lm b/c
+need to run 'fit' first 
+```{r}
+glm.fit = glm(mpg~horsepower , data = Auto)
+cv.mse =cv.glm(Auto,glm.fit)
+
+cv.mse
+# k = number row
+
+# delda is the one we want = coef ***
+```
+
+delta=> []24.23 24.23 ignor the second one
+```{r}
+glm.fit = glm(mpg~poly(horsepower,2), data = Auto)
+# glm.fit = glm(mpg~horsepower, data = Auto) # 24.xx
+
+cv.mse = cv.glm(Auto,glm.fit)
+val.mse = cv.mse$delta[1]
+val.mse
+```
+loop
+
+```{r}
+val.mse.allmodel = c()
+for(degree in 1:10){
+  
+  glm.fit = glm(mpg~poly(horsepower,degree), data = Auto)
+# glm.fit = glm(mpg~horsepower, data = Auto) # 24.xx
+
+  cv.mse = cv.glm(Auto,glm.fit)
+  val.mse = cv.mse$delta[1]
+  val.mse.allmodel =c(val.mse.allmodel, val.mse)
+}
+val.mse.allmodel
+```
+
+K-fold CV
+```{r}
+set.seed(2024)
+glm.fit = glm(mpg~poly(horsepower,1) , data = Auto)
+cv.mse =cv.glm(Auto,glm.fit, K =5) # 5is size  
+
+val.mse = cv.mse$delta[1]
+val.mse
+# k = number row
+
+# delda is the one we want = coef ***
+```
+
+```{r}
+set.seed(2024)
+val.mse.allmodel = c()
+for(degree in 1:10){
+  
+  glm.fit = glm(mpg~poly(horsepower,degree), data = Auto)
+# glm.fit = glm(mpg~horsepower, data = Auto) # 24.xx
+
+  cv.mse = cv.glm(Auto,glm.fit, K = 5)
+  val.mse = cv.mse$delta[1]
+  val.mse.allmodel =c(val.mse.allmodel, val.mse)
+}
+val.mse.allmodel
+```
